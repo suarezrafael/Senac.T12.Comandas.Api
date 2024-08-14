@@ -7,9 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // obtem o endereco do banco de dados
 var conexao = builder.Configuration.GetConnectionString("Conexao");
-builder.Services.AddDbContext<ComandaContexto>(opt =>
+
+builder.Services.AddDbContext<ComandaContexto>(config =>
 {
-    opt.UseMySql(conexao, ServerVersion.Parse("10.4.28-MariaDB"));
+    config.UseMySql(conexao, ServerVersion.Parse("10.4.28-MariaDB"));
 });
 
 builder.Services.AddControllers();
