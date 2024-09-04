@@ -41,14 +41,31 @@ namespace Comandas.Api.Controllers
         // PUT: api/Comandas/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutComanda(int id, Comanda comanda)
+        public async Task<IActionResult> PutComanda(int id, ComandaUpdateDto comanda)
         {
             if (id != comanda.Id)
             {
                 return BadRequest();
             }
+            // SELECT * FROM Comandas WHERE id = 2
+            var comandaUpdate = await _context.Comandas
+                .FirstAsync(cu => cu.Id == id);
 
-            _context.Entry(comanda).State = EntityState.Modified;
+            if (comanda.NumeroMesa > 0)
+                comandaUpdate.NumeroMesa = comanda.NumeroMesa;
+
+            if (!string.IsNullOrEmpty(comanda.NomeCliente))
+                comandaUpdate.NomeCliente = comanda.NomeCliente;
+
+            foreach (var item in comanda.CardapioItems)
+            {
+                var novoComandaItem = new ComandaItem()
+                {
+                    Comanda = comandaUpdate,
+                    CardapioItemId = item
+                };
+                await _context.ComandaItems.AddAsync(novoComandaItem);
+            }
 
             try
             {
@@ -85,15 +102,18 @@ namespace Comandas.Api.Controllers
             // INSERT INTO COMANDAS (Id, NUmeroMesa) VALUES(1,2)
             await _context.Comandas.AddAsync(novaComanda);
 
-            var novoItemComanda = new ComandaItem()
+            foreach (var item in comanda.CardapioItems)
             {
-                Comanda = novaComanda,
-                CardapioItemId = comanda.CardapioItems[0]
-            };
+                var novoItemComanda = new ComandaItem()
+                {
+                    Comanda = novaComanda,
+                    CardapioItemId = item
+                };
 
-            // adicionando o novo item na comanda
-            // INSERT INTO ComandaItens (Id, CardapioItemId)
-            await _context.ComandaItems.AddAsync(novoItemComanda);
+                // adicionando o novo item na comanda
+                // INSERT INTO ComandaItens (Id, CardapioItemId)
+                await _context.ComandaItems.AddAsync(novoItemComanda);
+            }
 
             // salvando a comanda
             await _context.SaveChangesAsync();
