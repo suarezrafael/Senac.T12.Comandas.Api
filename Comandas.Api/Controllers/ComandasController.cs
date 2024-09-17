@@ -134,8 +134,30 @@ namespace Comandas.Api.Controllers
                 };
 
                 // adicionando o novo item na comanda
-                // INSERT INTO ComandaItens (Id, CardapioItemId)
+                // INSERT INTO ComandaItens (Id, CardapioItemId, ComandaId) VALUES(AI, 3, 5)
                 await _context.ComandaItems.AddAsync(novoItemComanda);
+
+                // Verificar se o cardapio possui preparo
+                // SELECT PossuiPreparo FROM CardapioItem Where Id = <item>
+                var cardapioItem = await _context.CardapioItems.FindAsync(item);
+
+                if (cardapioItem.PossuiPreparo)
+                {
+                    var novoPedidoCozinha = new PedidoCozinha()
+                    {
+                        Comanda = novaComanda,
+                        SituacaoId = 1 // PENDENTE
+                    };
+                    // INSERT INTO PedidoCozinha (Id,ComandaId, SituacaoId) VALUES(1+, 6, 1 )
+                    await _context.PedidoCozinhas.AddAsync(novoPedidoCozinha);
+
+                    var novoPedidoCozinhaItem = new PedidoCozinhaItem()
+                    {
+                        PedidoCozinha = novoPedidoCozinha,
+                        ComandaItem = novoItemComanda
+                    };
+                    await _context.PedidoCozinhaItems.AddAsync(novoPedidoCozinhaItem);
+                }
             }
 
             // salvando a comanda
