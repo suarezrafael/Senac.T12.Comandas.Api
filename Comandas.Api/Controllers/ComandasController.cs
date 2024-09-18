@@ -88,6 +88,24 @@ namespace Comandas.Api.Controllers
                     CardapioItemId = item
                 };
                 await _context.ComandaItems.AddAsync(novoComandaItem);
+
+                // verificar se o cardapio possui preparo, se sim criar o pedido da cozinha
+                var cardapioItem = await _context.CardapioItems.FindAsync(item);
+                if (cardapioItem.PossuiPreparo)
+                {
+                    var novoPedidoCozinha = new PedidoCozinha()
+                    {
+                        Comanda = comandaUpdate,
+                        SituacaoId = 1
+                    };
+                    await _context.PedidoCozinhas.AddAsync(novoPedidoCozinha);
+                    var novoPedidoCozinhaItem = new PedidoCozinhaItem()
+                    {
+                        PedidoCozinha = novoPedidoCozinha,
+                        ComandaItem = novoComandaItem
+                    };
+                    await _context.PedidoCozinhaItems.AddAsync(novoPedidoCozinhaItem);
+                }
             }
 
             try
