@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Comandas.Api.Dtos;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaDeComandas.BancoDeDados;
-using SistemaDeComandas.Modelos;
 
 namespace Comandas.Api.Controllers
 {
@@ -20,29 +20,46 @@ namespace Comandas.Api.Controllers
         /// <summary>
         /// 
         /// </summary>
-        /// <returns>[ {id, ComandaId, SituacaoId },...  ]</returns>
+        /// <returns>[ {Id, NumeroPesa, NomeCliente,TItulo },...  ]</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PedidoCozinha>>> GetPedidos([FromQuery] int? situacaoId)
+        public async Task<ActionResult<IEnumerable<PedidoCozinhaGetDto>>> GetPedidos([FromQuery] int? situacaoId)
         {
-            // SELECT * FROM PedidoCozinha p
-            // INNER JOIN Comanda c on c.Id = p.ComandaId
-
             var query = _context.PedidoCozinhas
                             .Include(p => p.Comanda)
                             .Include(p => p.PedidoCozinhaItems)
+                              .ThenInclude(p => p.ComandaItem)
+                                .ThenInclude(p => p.CardapioItem)
                             .AsQueryable();
 
             if (situacaoId > 0)
                 query = query.Where(w => w.SituacaoId == situacaoId);
 
-            return await query.ToListAsync();
+            return await query
+                .Select(s => new PedidoCozinhaGetDto()
+                {
+                    Id = s.Id,
+                    NumeroMesa = s.Comanda.NumeroMesa,
+                    NomeCliente = s.Comanda.NomeCliente,
+                    Titulo = s.PedidoCozinhaItems.First().ComandaItem.CardapioItem.Titulo
+                }).ToListAsync();
         }
 
-        // GET api/<PedidoCozinhasController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        // Atualizar um pedido de cozinha para um novo status
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutPedidoCozinha(int id, PedidoCozinhaUpdateDto pedido)
         {
-            return "value";
+            // Consulta o pedido pelo Id informados
+            // SELECT * FROM PedidoCozinha WHERE id = @id
+            var pedidoCozinha = await _context
+                                        .PedidoCozinhas
+                                        .FirstAsync(p => p.Id == id);
+            // Alteração do Status
+            pedidoCozinha.SituacaoId = pedido.NovoStatusId;
+            // Gravação no Banco de Dados
+            // UPDATE PEdidoCozinha SET SituacaoId = 3 WHERE Id = @id
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
     }
