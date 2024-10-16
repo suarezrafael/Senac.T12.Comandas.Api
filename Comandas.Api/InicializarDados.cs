@@ -61,10 +61,8 @@ namespace Comandas.Api
                 var comanda = new Comanda() { NomeCliente = "RAFAEL VIEIRA SUAREZ", NumeroMesa = 1, SituacaoComanda = 1 };
                 banco.Comandas.Add(comanda);
 
-                if (!banco.ComandaItems.Any())
-                {
-                    banco.ComandaItems.AddRange(
-                        new ComandaItem()
+                ComandaItem[] comandaItems =
+                {       new ComandaItem()
                         {
                             Comanda = comanda,
                             CardapioItemId = 1
@@ -74,8 +72,25 @@ namespace Comandas.Api
                             Comanda = comanda,
                             CardapioItemId = 2
                         }
-                    );
+                    };
+
+                if (!banco.ComandaItems.Any())
+                {
+                    banco.ComandaItems.AddRange(comandaItems);
                 }
+
+                var pedidoCozinha = new PedidoCozinha { Comanda = comanda };
+                var pedidoCozinha2 = new PedidoCozinha { Comanda = comanda };
+
+                PedidoCozinhaItem[] pedidoCozinhaItems =
+                {
+                    new PedidoCozinhaItem{PedidoCozinha = pedidoCozinha , ComandaItem = comandaItems[0] },
+                    new PedidoCozinhaItem{PedidoCozinha = pedidoCozinha2 , ComandaItem = comandaItems[1] }
+                };
+
+                banco.PedidoCozinhas.Add(pedidoCozinha);
+                banco.PedidoCozinhas.Add(pedidoCozinha2);
+                banco.PedidoCozinhaItems.AddRange(pedidoCozinhaItems);
             }
             // INSERT INTO CardapioItem (Columns) VALUES(1, 'SALSICHAO')
             banco.SaveChanges();
