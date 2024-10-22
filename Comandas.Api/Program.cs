@@ -11,7 +11,8 @@ var conexao = builder.Configuration.GetConnectionString("Conexao");
 
 builder.Services.AddDbContext<ComandaContexto>(config =>
 {
-    config.UseMySql(conexao, ServerVersion.Parse("10.4.28-MariaDB"));
+    //config.UseMySql(conexao, ServerVersion.Parse("10.4.28-MariaDB"));
+    config.UseSqlServer(conexao);
 });
 
 builder.Services.AddControllers();
@@ -34,11 +35,10 @@ using (var e = app.Services.CreateScope())
 
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 
 app.UseHttpsRedirection();
 

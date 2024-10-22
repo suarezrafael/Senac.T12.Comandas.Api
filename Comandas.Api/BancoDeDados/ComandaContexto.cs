@@ -28,37 +28,43 @@ namespace SistemaDeComandas.BancoDeDados
             modelBuilder.Entity<Comanda>()
                 .HasMany<ComandaItem>()
                 .WithOne(ci => ci.Comanda)
-                .HasForeignKey(f => f.ComandaId);
+                .HasForeignKey(f => f.ComandaId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<ComandaItem>()
                 .HasOne(ci => ci.Comanda)
                 .WithMany(ci => ci.ComandaItems)
-                .HasForeignKey(f => f.ComandaId);
+                .HasForeignKey(f => f.ComandaId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             // O Item da comanda possui um Item de Cardápio
             // E sua chave extrangeira é CardapioItemId
             modelBuilder.Entity<ComandaItem>()
                 .HasOne(ci => ci.CardapioItem)
                 .WithMany()
-                .HasForeignKey(ci => ci.CardapioItemId);
+                .HasForeignKey(ci => ci.CardapioItemId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             // Pedido Cozinha com Pedido Cozinha Item
             modelBuilder.Entity<PedidoCozinha>()
                 .HasMany<PedidoCozinhaItem>()
                 .WithOne(pci => pci.PedidoCozinha)
-                .HasForeignKey(pci => pci.PedidoCozinhaId);
+                .HasForeignKey(pci => pci.PedidoCozinhaId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<PedidoCozinhaItem>()
                 .HasOne(tico => tico.PedidoCozinha)
                 .WithMany(tico => tico.PedidoCozinhaItems)
-                .HasForeignKey(teco => teco.PedidoCozinhaId);
+                .HasForeignKey(teco => teco.PedidoCozinhaId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             // pedido cozinha item possui um comanda item
             // E sua chave extrangeira é ComandaItemId
             modelBuilder.Entity<PedidoCozinhaItem>()
                 .HasOne(pci => pci.ComandaItem)
                 .WithMany()
-                .HasForeignKey(pci => pci.ComandaItemId);
+                .HasForeignKey(pci => pci.ComandaItemId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             base.OnModelCreating(modelBuilder);
         }
