@@ -17,11 +17,31 @@ namespace Comandas.Api.Controllers
             _context = context;
         }
 
+        // Consulta as comandas com status ABERTA(1)
+        // SELECT * FROM Comandas WHERE SituacaoComanda = 1
         // GET: api/Comandas
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Comanda>>> GetComandas()
+        public async Task<ActionResult<IEnumerable<ComandaGetDto>>> GetComandas()
         {
-            return await _context.Comandas.ToListAsync();
+            // SELECT c.NumeroMesa, c.NomeCLiente FROM Comandas WHERE SituacaoComanda = 1
+            var comandas = await _context.Comandas
+                .Where(c => c.SituacaoComanda == 1)
+                .Select(c => new ComandaGetDto
+                {
+                    Id = c.Id,
+                    NumeroMesa = c.NumeroMesa,
+                    NomeCliente = c.NomeCliente,
+                    ComandaItens = c.ComandaItems
+                                    .Select(ci => new ComandaItensGetDto
+                                    {
+                                        Id = ci.Id,
+                                        Titulo = ci.CardapioItem.Titulo,
+                                    })
+                                    .ToList()
+                })
+                .ToListAsync();
+            // retorna o conteudo com a lista de comandas
+            return Ok(comandas);
         }
 
         // GET: api/Comandas/5
@@ -193,10 +213,23 @@ namespace Comandas.Api.Controllers
             {
                 return NotFound();
             }
-
             _context.Comandas.Remove(comanda);
             await _context.SaveChangesAsync();
 
+            return NoContent();
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PatchComanda(int id)
+        {   // consulto a comanda SELECT * from Comandas WHERE id = {id}
+            var comanda = await _context.Comandas.FindAsync(id);
+            if (comanda == null) // retorna um 404
+                return NotFound();
+            // alteração comanda
+            comanda.SituacaoComanda = 2;
+            // UPDATE Comandas SET SituacaoComanda = 2 WHERE id = {id}
+            await _context.SaveChangesAsync();
+            // returna um 204
             return NoContent();
         }
 
