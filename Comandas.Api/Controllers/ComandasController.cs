@@ -121,32 +121,47 @@ namespace Comandas.Api.Controllers
             if (!string.IsNullOrEmpty(comanda.NomeCliente))
                 comandaUpdate.NomeCliente = comanda.NomeCliente;
 
-            foreach (var item in comanda.CardapioItems)
+            foreach (var item in comanda.ComandaItens)
             {
-                var novoComandaItem = new ComandaItem()
+                //incluir
+                if (item.incluir)
                 {
-                    Comanda = comandaUpdate,
-                    CardapioItemId = item
-                };
-                await _context.ComandaItems.AddAsync(novoComandaItem);
-
-                // verificar se o cardapio possui preparo, se sim criar o pedido da cozinha
-                var cardapioItem = await _context.CardapioItems.FindAsync(item);
-                if (cardapioItem.PossuiPreparo)
-                {
-                    var novoPedidoCozinha = new PedidoCozinha()
+                    var novoComandaItem = new ComandaItem()
                     {
                         Comanda = comandaUpdate,
-                        SituacaoId = 1
+                        CardapioItemId = item.cardapioItemId
                     };
-                    await _context.PedidoCozinhas.AddAsync(novoPedidoCozinha);
-                    var novoPedidoCozinhaItem = new PedidoCozinhaItem()
+
+                    await _context.ComandaItems.AddAsync(novoComandaItem);
+
+                    // verificar se o cardapio possui preparo, se sim criar o pedido da cozinha
+                    var cardapioItem = await _context.CardapioItems.FindAsync(item);
+                    if (cardapioItem.PossuiPreparo)
                     {
-                        PedidoCozinha = novoPedidoCozinha,
-                        ComandaItem = novoComandaItem
-                    };
-                    await _context.PedidoCozinhaItems.AddAsync(novoPedidoCozinhaItem);
+                        var novoPedidoCozinha = new PedidoCozinha()
+                        {
+                            Comanda = comandaUpdate,
+                            SituacaoId = 1
+                        };
+                        await _context.PedidoCozinhas.AddAsync(novoPedidoCozinha);
+                        var novoPedidoCozinhaItem = new PedidoCozinhaItem()
+                        {
+                            PedidoCozinha = novoPedidoCozinha,
+                            ComandaItem = novoComandaItem
+                        };
+                        await _context.PedidoCozinhaItems.AddAsync(novoPedidoCozinhaItem);
+                    }
                 }
+
+                // excluir
+                if (item.excluir)
+                {
+                    var comandaItemExcluir = await _context.ComandaItems
+                        .FirstAsync(tico => tico.Id == item.Id);
+
+                    _context.ComandaItems.Remove(comandaItemExcluir);
+                }
+
             }
 
             try
