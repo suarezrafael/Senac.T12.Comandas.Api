@@ -94,8 +94,29 @@ namespace Comandas.Api.Controllers
             var comandaUpdate = await _context.Comandas
                 .FirstAsync(cu => cu.Id == id);
 
+            // verifica se foi informada uma nova mesa
             if (comanda.NumeroMesa > 0)
+            {
+                // verificar a disponibilidade da nova mesa
+                // SELECT * FROM MESAS WHERE NumeroMesa = 2
+                var mesa = await _context.Mesas
+                    .FirstOrDefaultAsync(m => m.NumeroMesa == comanda.NumeroMesa);
+                if (mesa == null)
+                    return BadRequest("Mesa inválida.");
+                if (mesa.SituacaoMesa != 0)
+                    return BadRequest("Mesa ocupada.");
+
+                // alocar a nova mesa 
+                mesa.SituacaoMesa = 1;
+
+                // desalocar a mesa atual
+                var mesaAtual = await _context.Mesas
+                    .FirstAsync(mesa => mesa.NumeroMesa == comandaUpdate.NumeroMesa);
+                mesaAtual.SituacaoMesa = 0;
+
+                // atualiza o numero da mesa na comanda
                 comandaUpdate.NumeroMesa = comanda.NumeroMesa;
+            }
 
             if (!string.IsNullOrEmpty(comanda.NomeCliente))
                 comandaUpdate.NomeCliente = comanda.NomeCliente;
@@ -152,6 +173,19 @@ namespace Comandas.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<Comanda>> PostComanda(ComandaDto comanda)
         {
+            // verificar se a mesa está disponivel
+            // Pesquisa a mesa no banco (SELECT * FROM MESAS WHERE NumeroMesa = 2)
+            var mesa = _context.Mesas.FirstOrDefault(m => m.NumeroMesa == comanda.NumeroMesa);
+
+            if (mesa is null)
+                return BadRequest("Mesa não encontrada");
+
+            if (mesa.SituacaoMesa != 0)
+                return BadRequest("Esta mesa está ocupada");
+
+            // altera a mesa para ocupada para nao permitir abrir outra comanda para a mesma mesa
+            mesa.SituacaoMesa = 1;
+
             // criando uma nova comanda
             var novaComanda = new Comanda()
             {
@@ -227,6 +261,11 @@ namespace Comandas.Api.Controllers
                 return NotFound();
             // alteração comanda
             comanda.SituacaoComanda = 2;
+
+            // liberar a mesa
+            var mesa = await _context.Mesas.FirstAsync(m => m.NumeroMesa == comanda.NumeroMesa);
+            mesa.SituacaoMesa = 0;
+
             // UPDATE Comandas SET SituacaoComanda = 2 WHERE id = {id}
             await _context.SaveChangesAsync();
             // returna um 204
