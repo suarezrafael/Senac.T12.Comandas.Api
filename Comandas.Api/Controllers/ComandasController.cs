@@ -135,7 +135,7 @@ namespace Comandas.Api.Controllers
                     await _context.ComandaItems.AddAsync(novoComandaItem);
 
                     // verificar se o cardapio possui preparo, se sim criar o pedido da cozinha
-                    var cardapioItem = await _context.CardapioItems.FindAsync(item);
+                    var cardapioItem = await _context.CardapioItems.FindAsync(item.cardapioItemId);
                     if (cardapioItem.PossuiPreparo)
                     {
                         var novoPedidoCozinha = new PedidoCozinha()

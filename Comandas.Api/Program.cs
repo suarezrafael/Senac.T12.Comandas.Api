@@ -19,7 +19,7 @@ var conexao = builder.Configuration.GetConnectionString("Conexao");
 
 builder.Services.AddDbContext<ComandaContexto>(config =>
 {
-    config.UseMySql(conexao, ServerVersion.Parse("10.4.28-MariaDB"));
+    config.UseSqlServer(conexao);
 });
 
 builder.Services.AddControllers();
