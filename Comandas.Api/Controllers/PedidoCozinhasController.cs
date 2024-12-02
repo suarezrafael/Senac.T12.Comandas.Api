@@ -34,14 +34,14 @@ namespace Comandas.Api.Controllers
             if (situacaoId > 0)
                 query = query.Where(w => w.SituacaoId == situacaoId);
 
-            return await query
+            return Ok(await query
                 .Select(s => new PedidoCozinhaGetDto()
                 {
                     Id = s.Id,
                     NumeroMesa = s.Comanda.NumeroMesa,
                     NomeCliente = s.Comanda.NomeCliente,
                     Titulo = s.PedidoCozinhaItems.First().ComandaItem.CardapioItem.Titulo
-                }).ToListAsync();
+                }).ToListAsync());
         }
 
         // Atualizar um pedido de cozinha para um novo status
