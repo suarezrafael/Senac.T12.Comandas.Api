@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Comandas.Api.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using SistemaDeComandas.BancoDeDados;
 using SistemaDeComandas.Modelos;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Comandas.Api.Controllers
 {
@@ -19,6 +19,31 @@ namespace Comandas.Api.Controllers
         public UsuariosController(ComandaContexto context)
         {
             _context = context;
+        }
+
+        [HttpPost("Login")]
+        public async Task<ActionResult<UsuarioResponse>> Login(UsuarioRequest usuario)
+        {
+
+
+            // Crie um token JWT
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes("3e8acfc238f45a314fd4b2bde272678ad30bd1774743a11dbc5c53ac71ca494b");
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                new Claim(ClaimTypes.Name, "usr.Nome"),
+                new Claim(ClaimTypes.NameIdentifier, "1")
+                }),
+                Expires = DateTime.UtcNow.AddHours(1), // Tempo de expiração do token
+
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            return Ok(new UsuarioResponse() { Id = 1, Nome = "usr.Nome", Usuario = "usr.NomeUsuario", Token = tokenString });
         }
 
         // GET: api/Usuarios
