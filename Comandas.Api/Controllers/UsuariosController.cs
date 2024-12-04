@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Comandas.Api.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using SistemaDeComandas.BancoDeDados;
 using SistemaDeComandas.Modelos;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Comandas.Api.Controllers
 {
@@ -19,6 +19,45 @@ namespace Comandas.Api.Controllers
         public UsuariosController(ComandaContexto context)
         {
             _context = context;
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult<UsuarioResponse>> Login([FromBody] UsuarioRequest usuarioRequest)
+        {
+            // CONSULTA USUARIO VERIFICAR SE USUARIO E SENHA CORRETOS 
+
+            // GERAÇÃO DO TOKEN
+            // Criar uma fabrica de token
+            var tokenHandler = new JwtSecurityTokenHandler();
+            // chave secreta
+            var key = Encoding.UTF8.GetBytes("3e8acfc238f45a314fd4b2bde272678ad30bd1774743a11dbc5c53ac71ca494b");
+
+            var usuario = await _context.Usuarios
+                                .FirstOrDefaultAsync(u => u.Email.Equals(usuarioRequest.Email));
+
+            if (usuario == null)
+                return NotFound("usuário inválido.");
+
+            if (!usuario.Senha.Equals(usuarioRequest.Senha))
+                return BadRequest("Usuário/Senha inválido.");
+
+            // descreve as informações que o token possuirá
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                new Claim(ClaimTypes.Name, usuario.Nome),
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+
+                }),
+                Expires = DateTime.UtcNow.AddHours(1), // Tempo de expiração do token
+
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            return Ok(new UsuarioResponse { Id = 1, Nome = "Rafael", Token = tokenString });
         }
 
         // GET: api/Usuarios
